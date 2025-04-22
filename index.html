@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Менеджер задач</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    input[type="text"], input[type="date"] {
+      padding: 5px;
+      margin-right: 10px;
+    }
+    button {
+      padding: 5px 10px;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      padding: 10px;
+      background-color: white;
+      margin-bottom: 5px;
+      border-radius: 4px;
+    }
+    .done {
+      text-decoration: line-through;
+      color: gray;
+    }
+    .overdue {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Менеджер задач</h1>
+    <form @submit.prevent="addTask">
+      <input v-model="newTask.text" placeholder="Введите задачу" required>
+      <input type="date" v-model="newTask.deadline" required>
+      <button type="submit">Добавить</button>
+    </form>
+
+    <ul>
+      <li v-for="(task, index) in tasks" :key="index"
+          :class="{ done: task.done, overdue: isOverdue(task) && !task.done }">
+        <input type="checkbox" v-model="task.done">
+        {{ task.text }} — до {{ task.deadline }}
+        <button @click="deleteTask(index)">Удалить</button>
+      </li>
+    </ul>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+    createApp({
+      data() {
+        return {
+          newTask: {
+            text: '',
+            deadline: ''
+          },
+          tasks: []
+        };
+      },
+      methods: {
+        addTask() {
+          if (this.newTask.text && this.newTask.deadline) {
+            this.tasks.push({ ...this.newTask, done: false });
+            this.newTask.text = '';
+            this.newTask.deadline = '';
+            this.saveTasks();
+          }
+        },
+        deleteTask(index) {
+          this.tasks.splice(index, 1);
+          this.saveTasks();
+        },
+        isOverdue(task) {
+          const today = new Date().toISOString().split('T')[0];
+          return task.deadline < today;
+        },
+        saveTasks() {
+          localStorage.setItem('tasks', JSON.stringify(this.tasks));
+        },
+        loadTasks() {
+          const saved = localStorage.getItem('tasks');
+          if (saved) {
+            this.tasks = JSON.parse(saved);
+          }
+        }
+      },
+      mounted() {
+        this.loadTasks();
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
